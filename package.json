@@ -1,0 +1,20 @@
+﻿{
+  "name": "dorm508",
+  "version": "1.0.0",
+  "description": "508宿舍官方网站",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["dorm", "508"],
+  "author": "508宿舍",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.10.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

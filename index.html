@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>508宿舍 - 官方网站</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b6b'/><text x='32' y='46' text-anchor='middle' font-size='38' font-weight='bold' fill='white' font-family='Arial'>508</text></svg>">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="nav" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <span class="logo-text">🏠 508</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#members">成员</a></li>
+                <li><a href="#travel">旅行</a></li>
+                <li><a href="#photowall">照片墙</a></li>
+                <li><a href="#guestbook">留言</a></li>
+            </ul>
+            <div class="nav-auth">
+                <button class="btn-login" id="btnLogin">🔑 登录</button>
+                <div class="user-menu hidden" id="userMenu">
+                    <span class="user-name" id="displayName"></span>
+                    <button class="btn-logout" id="btnLogout">退出</button>
+                </div>
+            </div>
+            <button class="nav-mobile-toggle" id="mobileToggle" aria-label="菜单">
+                <span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 登录弹窗 -->
+    <div class="modal-overlay hidden" id="loginModal">
+        <div class="modal">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-tab="login">登录</button>
+                <button class="modal-tab" data-tab="register">注册</button>
+            </div>
+            <!-- 登录表单 -->
+            <form class="auth-form" id="loginForm">
+                <h3>欢迎回来 👋</h3>
+                <input type="text" placeholder="用户名" id="loginUsername" required>
+                <input type="password" placeholder="密码" id="loginPassword" required>
+                <p class="auth-error hidden" id="loginError"></p>
+                <button type="submit" class="btn btn-primary btn-full">登 录</button>
+            </form>
+            <!-- 注册表单 -->
+            <form class="auth-form hidden" id="registerForm">
+                <h3>加入508 🎉</h3>
+                <input type="text" placeholder="用户名（至少2位）" id="regUsername" required>
+                <input type="password" placeholder="密码（至少6位）" id="regPassword" required>
+                <input type="password" placeholder="确认密码" id="regPassword2" required>
+                <p class="auth-error hidden" id="regError"></p>
+                <button type="submit" class="btn btn-primary btn-full">注 册</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 英雄区 -->
+    <section class="hero" id="home">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-badge">🏆 五星级宿舍认证</div>
+            <h1 class="hero-title">赛博508 </h1>
+            <p class="hero-subtitle">兄弟同心 · 其利断金 · 青春不散场</p>
+            <p class="hero-desc">欢迎来到508宿舍官方网站！这里记录着我们的欢笑、奋斗与成长。</p>
+            <div class="hero-cta">
+                <a href="#members" class="btn btn-primary">认识成员</a>
+                <a href="#photowall" class="btn btn-outline">照片墙</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-num" data-target="5">0</span>
+                    <span class="stat-label">宿舍成员</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" data-target="988">0</span>
+                    <span class="stat-label">共同度过（天）</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" data-target="99">0</span>
+                    <span class="stat-label">深夜卧谈（次）</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" data-target="100">0</span>
+                    <span class="stat-label">快乐指数</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 成员介绍 -->
+    <section class="members-section" id="members">
+        <div class="section-header">
+            <h2>👥 宿舍成员</h2>
+            <p>神人怎么都在你们宿舍</p>
+        </div>
+        <div class="members-grid">
+            <div class="member-card">
+                <div class="member-avatar">
+                    <img src="image/zhaochenle.jpg" alt="赵宸乐">
+                </div>
+                <h3>赵宸乐</h3>
+                <p class="member-role">赵妈</p>
+                <p class="member-bio">"我吉星转呢？"</p>
+                <div class="member-tags">
+                    <span>🚺 女主播一生之敌</span><span>🎮 样样通样样松</span><span>🌙 夜猫</span>
+                </div>
+            </div>
+            <div class="member-card">
+                <div class="member-avatar">
+                    <img src="image/yangshanling.jpg" alt="杨山令">
+                </div>
+                <h3>杨山令</h3>
+                <p class="member-role">花呗兽</p>
+                <p class="member-bio">"不管了"</p>
+                <div class="member-tags">
+                    <span>🎮 电竞</span><span>🌙 夜猫</span><span>🦥 拖延症</span>
+                </div>
+            </div>
+            <div class="member-card">
+                <div class="member-avatar">
+                    <img src="image/lixin.jpg" alt="李鑫">
+                </div>
+                <h3>李鑫</h3>
+                <p class="member-role">干净又卫生</p>
+                <p class="member-bio">"求你了，杨哥"</p>
+                <div class="member-tags">
+                    <span>🎸 音乐</span><span>🎮 电竞</span><span>🌙 夜猫</span>
+                </div>
+            </div>
+            <div class="member-card">
+                <div class="member-avatar">
+                    <img src="image/yuhualin.jpg" alt="余桦林">
+                </div>
+                <h3>余桦林</h3>
+                <p class="member-role">烂梗王</p>
+                <p class="member-bio">"我chovy 室友给我来好的啊"</p>
+                <div class="member-tags">
+                    <span>⚽ 运动</span><span>💪 健身</span><span>🌟 阳光</span>
+                </div>
+            </div>
+            <div class="member-card">
+                <div class="member-avatar">
+                    <img src="image/caoziyang.jpg" alt="曹子杨">
+                </div>
+                <h3>曹子杨</h3>
+                <p class="member-role">技术宅 / 后勤部长</p>
+                <p class="member-bio">修电脑装系统一条龙，宿舍Wi-Fi守护者。名言："重启试试！"</p>
+                <div class="member-tags">
+                    <span>💻 技术</span><span>🔧 动手</span><span>🤖 极客</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 旅行模块 -->
+    <section class="travel-section" id="travel">
+        <div class="section-header">
+            <h2>✈️ 读万卷书不如行万里路</h2>
+            <p>世界那么大，508带你去看看</p>
+        </div>
+        <div class="travel-grid">
+            <div class="travel-card">
+                <div class="travel-img">
+                    <img src="travel/fbi.jpg" alt="FBI旅行">
+                </div>
+                <div class="travel-info">
+                    <h3>🚔 FBI Open the door!</h3>
+                    <p>尼克狐尼克 你被逮捕了</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 照片墙 -->
+    <section class="photowall-section" id="photowall">
+        <div class="section-header">
+            <h2>🖼️ 照片墙</h2>
+            <p>每一帧都是青春的印记</p>
+        </div>
+        <div class="photowall-grid">
+            <div class="photowall-item">
+                <img src="PhotoWall/微信图片_20260528055932_125_2.jpg" alt="照片1">
+            </div>
+            <div class="photowall-item">
+                <img src="PhotoWall/微信图片_20260528055932_126_2.jpg" alt="照片2">
+            </div>
+            <div class="photowall-item">
+                <img src="PhotoWall/微信图片_20260528055933_127_2.jpg" alt="照片3">
+            </div>
+            <div class="photowall-item">
+                <img src="PhotoWall/微信图片_20260528060018_128_2.jpg" alt="照片4">
+            </div>
+            <div class="photowall-item">
+                <img src="PhotoWall/微信图片_20260528060018_129_2.jpg" alt="照片5">
+            </div>
+        </div>
+    </section>
+
+    <!-- 留言板 -->
+    <section class="guestbook-section" id="guestbook">
+        <div class="section-header">
+            <h2>💬 留言板</h2>
+            <p>来都来了，留个言再走呗</p>
+        </div>
+        <div class="guestbook-container">
+            <form class="guestbook-form" id="guestbookForm">
+                <input type="text" placeholder="你的昵称" id="guestName" required>
+                <textarea placeholder="说点什么吧..." id="guestMessage" rows="3" required></textarea>
+                <button type="submit" class="btn btn-primary">📨 留言</button>
+            </form>
+            <div class="guestbook-list" id="guestbookList">
+                <div class="guestbook-item">
+                    <div class="guest-avatar">🐱</div>
+                    <div class="guest-content">
+                        <span class="guest-name">隔壁509</span>
+                        <p>508的兄弟们太有意思了！下次火锅叫上我们啊！</p>
+                        <span class="guest-time">2026-05-20</span>
+                    </div>
+                </div>
+                <div class="guestbook-item">
+                    <div class="guest-avatar">🐶</div>
+                    <div class="guest-content">
+                        <span class="guest-name">宿管阿姨</span>
+                        <p>508卫生保持得不错，继续保持！👍</p>
+                        <span class="guest-time">2026-05-18</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">🏠 508 宿舍</div>
+            <p class="footer-tagline">兄弟同心 · 其利断金 · 青春不散场</p>
+            <div class="footer-links">
+                <a href="#home">首页</a>
+                <a href="#members">成员</a>
+                <a href="#travel">旅行</a>
+                <a href="#photowall">照片墙</a>
+                <a href="#guestbook">留言</a>
+            </div>
+            <p class="footer-copy">© 2026 508宿舍 官方网站 | 用 ❤️ 和 🍜 构建</p>
+        </div>
+    </footer>
+
+    <!-- 回到顶部 -->
+    <button class="back-to-top" id="backToTop" aria-label="回到顶部">⬆</button>
+
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

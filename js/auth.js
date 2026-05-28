@@ -1,0 +1,159 @@
+﻿/* ===== 508宿舍 登录/注册模块 ===== */
+
+const API = 'http://localhost:3000/api';
+
+// 状态
+let currentUser = null;
+let currentToken = null;
+
+// 从 localStorage 恢复登录态
+(function restoreAuth() {
+    const saved = localStorage.getItem('dorm508_token');
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    currentToken = data.token;
+    fetch(`${API}/me`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
+            currentUser = data.user;
+            updateUI();
+        } else {
+            logout();
+        }
+    })
+    .catch(() => { /* 后端未启动，忽略 */ });
+})();
+
+// UI 元素
+const btnLogin = document.getElementById('btnLogin');
+const userMenu = document.getElementById('userMenu');
+const displayName = document.getElementById('displayName');
+const btnLogout = document.getElementById('btnLogout');
+const loginModal = document.getElementById('loginModal');
+const modalClose = document.getElementById('modalClose');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const loginError = document.getElementById('loginError');
+const regError = document.getElementById('regError');
+const modalTabs = document.querySelectorAll('.modal-tab');
+
+// 切换登录/注册表单
+modalTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        modalTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        loginForm.classList.toggle('hidden', target !== 'login');
+        registerForm.classList.toggle('hidden', target !== 'register');
+        loginError.classList.add('hidden');
+        regError.classList.add('hidden');
+    });
+});
+
+// 打开弹窗
+btnLogin.addEventListener('click', () => {
+    loginModal.classList.remove('hidden');
+});
+modalClose.addEventListener('click', () => {
+    loginModal.classList.add('hidden');
+});
+loginModal.addEventListener('click', (e) => {
+    if (e.target === loginModal) loginModal.classList.add('hidden');
+});
+
+// 退出
+btnLogout.addEventListener('click', logout);
+
+function logout() {
+    currentUser = null;
+    currentToken = null;
+    localStorage.removeItem('dorm508_token');
+    updateUI();
+}
+
+// 登录
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    loginError.classList.add('hidden');
+
+    try {
+        const res = await fetch(`${API}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            currentUser = data.user;
+            currentToken = data.token;
+            localStorage.setItem('dorm508_token', JSON.stringify({ token: data.token }));
+            updateUI();
+            loginModal.classList.add('hidden');
+            document.getElementById('loginPassword').value = '';
+        } else {
+            loginError.textContent = data.error;
+            loginError.classList.remove('hidden');
+        }
+    } catch (err) {
+        loginError.textContent = '无法连接服务器，请确保后端已启动';
+        loginError.classList.remove('hidden');
+    }
+});
+
+// 注册
+registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('regUsername').value.trim();
+    const password = document.getElementById('regPassword').value.trim();
+    const password2 = document.getElementById('regPassword2').value.trim();
+    regError.classList.add('hidden');
+
+    if (password !== password2) {
+        regError.textContent = '两次密码不一致';
+        regError.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            currentUser = data.user;
+            currentToken = data.token;
+            localStorage.setItem('dorm508_token', JSON.stringify({ token: data.token }));
+            updateUI();
+            loginModal.classList.add('hidden');
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regPassword2').value = '';
+        } else {
+            regError.textContent = data.error;
+            regError.classList.remove('hidden');
+        }
+    } catch (err) {
+        regError.textContent = '无法连接服务器，请确保后端已启动';
+        regError.classList.remove('hidden');
+    }
+});
+
+// 更新 UI
+function updateUI() {
+    if (currentUser) {
+        btnLogin.classList.add('hidden');
+        userMenu.classList.remove('hidden');
+        displayName.textContent = `👤 ${currentUser.username}`;
+    } else {
+        btnLogin.classList.remove('hidden');
+        userMenu.classList.add('hidden');
+        displayName.textContent = '';
+    }
+}
