@@ -6,15 +6,8 @@
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["dorm", "508"],
-  "author": "508宿舍",
-  "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
-    "express": "^4.21.0",
-    "jsonwebtoken": "^9.0.3",
-    "sql.js": "^1.10.0"
+    "express": "^4.21.0"
   }
 }
