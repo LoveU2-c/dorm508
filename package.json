@@ -1,20 +1,20 @@
-ï»¿{
+{
   "name": "dorm508",
   "version": "1.0.0",
-  "description": "508å®¿èˆå®˜æ–¹ç½‘ç«™",
+  "description": "508ËŞÉá¹Ù·½ÍøÕ¾",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "keywords": ["dorm", "508"],
-  "author": "508å®¿èˆ",
+  "author": "508ËŞÉá",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.10.0",
     "cors": "^2.8.6",
-    "express": "^5.2.1",
+    "express": "^4.21.0",
     "jsonwebtoken": "^9.0.3"
   }
 }
