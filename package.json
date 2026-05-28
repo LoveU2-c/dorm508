@@ -1,13 +1,13 @@
-{
+ï»¿{
   "name": "dorm508",
   "version": "1.0.0",
-  "description": "508ËŞÉá¹Ù·½ÍøÕ¾",
+  "description": "508å®¿èˆå®˜æ–¹ç½‘ç«™",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "keywords": ["dorm", "508"],
-  "author": "508ËŞÉá",
+  "author": "508å®¿èˆ",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
