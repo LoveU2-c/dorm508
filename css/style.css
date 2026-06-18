@@ -287,9 +287,16 @@ body {
 .guestbook-item:hover { background: #fff5f5; }
 .guest-avatar { font-size: 32px; flex-shrink: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
 .guest-content { flex: 1; }
+.guest-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .guest-name { font-size: 14px; font-weight: 700; color: var(--coral); }
 .guest-content p { font-size: 14px; color: var(--text); margin: 4px 0; line-height: 1.5; }
 .guest-time { font-size: 12px; color: var(--text-muted); }
+.guest-delete {
+    border: none; background: none; color: var(--text-muted); cursor: pointer;
+    font-size: 12px; padding: 2px 4px; transition: var(--transition);
+}
+.guest-delete:hover { color: var(--coral); }
+.guest-delete:disabled { cursor: wait; opacity: 0.5; }
 
 /* --- 页脚 --- */
 .footer { background: #2d3436; color: #fff; padding: 48px 24px 32px; text-align: center; }

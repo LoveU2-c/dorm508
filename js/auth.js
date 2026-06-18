@@ -158,4 +158,7 @@ function updateUI() {
         userMenu.classList.add('hidden');
         displayName.textContent = '';
     }
+    window.dispatchEvent(new CustomEvent('authchange', {
+        detail: { user: currentUser }
+    }));
 }

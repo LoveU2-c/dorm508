@@ -151,13 +151,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderMessage(msg, prepend = false) {
         const avatars = ['🐱', '🐶', '🐼', '🐨', '🦊', '🐰', '🐸', '🐵'];
         const avatar = avatars[msg.id ? msg.id % avatars.length : Math.floor(Math.random() * avatars.length)];
+        const canDelete = currentUser && Number(msg.user_id) === Number(currentUser.id);
 
         const item = document.createElement('div');
         item.className = 'guestbook-item';
+        item.dataset.messageId = msg.id;
         item.innerHTML = `
             <div class="guest-avatar">${avatar}</div>
             <div class="guest-content">
-                <span class="guest-name">${escapeHTML(msg.username)}</span>
+                <div class="guest-meta">
+                    <span class="guest-name">${escapeHTML(msg.username)}</span>
+                    ${canDelete ? '<button type="button" class="guest-delete">删除</button>' : ''}
+                </div>
                 <p>${escapeHTML(msg.content)}</p>
                 <span class="guest-time">${formatTime(msg.created_at)}</span>
             </div>
@@ -175,13 +180,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch(`${API}/messages`);
             const data = await res.json();
-            if (data.ok && data.messages.length > 0) {
-                // 清空默认占位留言
+            if (data.ok) {
                 guestbookList.innerHTML = '';
                 data.messages.forEach(msg => renderMessage(msg));
             }
         } catch (err) {
-            // 后端未启动，保留 HTML 中的默认留言
+            // 后端暂时不可用时保持当前内容。
         }
     }
 
@@ -208,12 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (data.ok) {
-                // 清除默认占位（首次留言时）
-                const defaultItems = guestbookList.querySelectorAll('.guestbook-item');
-                if (defaultItems.length <= 2 &&
-                    defaultItems[0]?.querySelector('.guest-name')?.textContent === '隔壁509') {
-                    guestbookList.innerHTML = '';
-                }
                 renderMessage(data.message, true);
                 document.getElementById('guestMessage').value = '';
             } else {
@@ -224,5 +222,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    guestbookList.addEventListener('click', async (e) => {
+        const button = e.target.closest('.guest-delete');
+        if (!button) return;
+
+        const item = button.closest('.guestbook-item');
+        const messageId = item?.dataset.messageId;
+        const token = getToken();
+        if (!messageId || !token || !confirm('确定删除这条留言吗？')) return;
+
+        button.disabled = true;
+        try {
+            const res = await fetch(`${API}/messages/${messageId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.ok) {
+                item.remove();
+            } else {
+                button.disabled = false;
+                alert(data.error || '删除失败');
+            }
+        } catch {
+            button.disabled = false;
+            alert('无法连接服务器，请稍后重试');
+        }
+    });
+
+    window.addEventListener('authchange', loadMessages);
     loadMessages();
 });

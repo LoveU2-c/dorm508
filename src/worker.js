@@ -119,7 +119,7 @@ app.get('/api/me', async (c) => {
 // ==================== 留言板 API ====================
 app.get('/api/messages', async (c) => {
   const { results } = await c.env.DB.prepare(
-    'SELECT id, username, content, created_at FROM messages ORDER BY id DESC'
+    'SELECT id, user_id, username, content, created_at FROM messages ORDER BY id DESC'
   ).all();
   return c.json({ ok: true, messages: results });
 });
@@ -151,13 +151,48 @@ app.post('/api/messages', async (c) => {
   }
 
   const result = await c.env.DB.prepare(
-    'INSERT INTO messages (username, content) VALUES (?, ?)'
-  ).bind(user.username, content.trim()).run();
+    'INSERT INTO messages (user_id, username, content) VALUES (?, ?, ?)'
+  ).bind(userId, user.username, content.trim()).run();
   const message = await c.env.DB.prepare(
     'SELECT * FROM messages WHERE id = ?'
   ).bind(result.meta.last_row_id).first();
 
   return c.json({ ok: true, message });
+});
+
+app.delete('/api/messages/:id', async (c) => {
+  const auth = c.req.header('Authorization');
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return c.json({ ok: false, error: '请先登录' }, 401);
+  }
+
+  let userId;
+  try {
+    const decoded = jwt.verify(auth.slice(7), getJwtSecret(c));
+    userId = decoded.id;
+  } catch {
+    return c.json({ ok: false, error: '登录已过期' }, 401);
+  }
+
+  const messageId = Number(c.req.param('id'));
+  if (!Number.isInteger(messageId) || messageId <= 0) {
+    return c.json({ ok: false, error: '留言不存在' }, 404);
+  }
+
+  const message = await c.env.DB.prepare(
+    'SELECT user_id FROM messages WHERE id = ?'
+  ).bind(messageId).first();
+  if (!message) {
+    return c.json({ ok: false, error: '留言不存在' }, 404);
+  }
+  if (Number(message.user_id) !== Number(userId)) {
+    return c.json({ ok: false, error: '只能删除自己的留言' }, 403);
+  }
+
+  await c.env.DB.prepare(
+    'DELETE FROM messages WHERE id = ? AND user_id = ?'
+  ).bind(messageId, userId).run();
+  return c.json({ ok: true });
 });
 
 // ==================== 静态文件 ====================

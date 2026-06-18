@@ -49,6 +49,7 @@ async function createEnv() {
   const db = new DatabaseSync(':memory:');
   db.exec(await readFile(new URL('../migrations/0001_init.sql', import.meta.url), 'utf8'));
   db.exec(await readFile(new URL('../migrations/0002_add_user_email.sql', import.meta.url), 'utf8'));
+  db.exec(await readFile(new URL('../migrations/0003_add_message_owner.sql', import.meta.url), 'utf8'));
   return {
     db,
     env: {
@@ -64,6 +65,16 @@ function post(path, body, env) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+  }, env);
+}
+
+function authenticatedRequest(path, method, token, env, body) {
+  const headers = { 'Authorization': `Bearer ${token}` };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  return app.request(`http://localhost${path}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
   }, env);
 }
 
@@ -135,6 +146,54 @@ test('rejects invalid email addresses and ambiguous usernames', async () => {
     password: 'secret123',
   }, env);
   assert.equal(ambiguousUsername.status, 400);
+
+  db.close();
+});
+
+test('allows users to delete only their own messages', async () => {
+  const { db, env } = await createEnv();
+
+  const ownerRegistration = await post('/api/register', {
+    username: 'owner',
+    email: 'owner@example.com',
+    password: 'secret123',
+  }, env);
+  const owner = await ownerRegistration.json();
+
+  const otherRegistration = await post('/api/register', {
+    username: 'other',
+    email: 'other@example.com',
+    password: 'secret123',
+  }, env);
+  const other = await otherRegistration.json();
+
+  const createResponse = await authenticatedRequest(
+    '/api/messages',
+    'POST',
+    owner.token,
+    env,
+    { content: 'owned message' }
+  );
+  assert.equal(createResponse.status, 200);
+  const created = await createResponse.json();
+  assert.equal(Number(created.message.user_id), Number(owner.user.id));
+
+  const forbiddenResponse = await authenticatedRequest(
+    `/api/messages/${created.message.id}`,
+    'DELETE',
+    other.token,
+    env
+  );
+  assert.equal(forbiddenResponse.status, 403);
+
+  const deleteResponse = await authenticatedRequest(
+    `/api/messages/${created.message.id}`,
+    'DELETE',
+    owner.token,
+    env
+  );
+  assert.equal(deleteResponse.status, 200);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM messages').get().count, 0);
 
   db.close();
 });
