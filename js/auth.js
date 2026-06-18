@@ -77,15 +77,15 @@ function logout() {
 // 登录
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
+    const identifier = document.getElementById('loginIdentifier').value.trim();
+    const password = document.getElementById('loginPassword').value;
     loginError.classList.add('hidden');
 
     try {
         const res = await fetch(`${API}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ identifier, password })
         });
         const data = await res.json();
         if (data.ok) {
@@ -109,8 +109,9 @@ loginForm.addEventListener('submit', async (e) => {
 registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('regUsername').value.trim();
-    const password = document.getElementById('regPassword').value.trim();
-    const password2 = document.getElementById('regPassword2').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const password2 = document.getElementById('regPassword2').value;
     regError.classList.add('hidden');
 
     if (password !== password2) {
@@ -123,7 +124,7 @@ registerForm.addEventListener('submit', async (e) => {
         const res = await fetch(`${API}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, email, password })
         });
         const data = await res.json();
         if (data.ok) {
@@ -133,6 +134,7 @@ registerForm.addEventListener('submit', async (e) => {
             updateUI();
             loginModal.classList.add('hidden');
             document.getElementById('regUsername').value = '';
+            document.getElementById('regEmail').value = '';
             document.getElementById('regPassword').value = '';
             document.getElementById('regPassword2').value = '';
         } else {

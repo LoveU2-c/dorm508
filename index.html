@@ -45,17 +45,18 @@
             <!-- 登录表单 -->
             <form class="auth-form" id="loginForm">
                 <h3>欢迎回来 👋</h3>
-                <input type="text" placeholder="用户名" id="loginUsername" required>
-                <input type="password" placeholder="密码" id="loginPassword" required>
+                <input type="text" placeholder="用户名或邮箱" id="loginIdentifier" autocomplete="username" required>
+                <input type="password" placeholder="密码" id="loginPassword" autocomplete="current-password" required>
                 <p class="auth-error hidden" id="loginError"></p>
                 <button type="submit" class="btn btn-primary btn-full">登 录</button>
             </form>
             <!-- 注册表单 -->
             <form class="auth-form hidden" id="registerForm">
                 <h3>加入508 🎉</h3>
-                <input type="text" placeholder="用户名（至少2位）" id="regUsername" required>
-                <input type="password" placeholder="密码（至少6位）" id="regPassword" required>
-                <input type="password" placeholder="确认密码" id="regPassword2" required>
+                <input type="text" placeholder="用户名（至少2位）" id="regUsername" autocomplete="username" minlength="2" maxlength="30" required>
+                <input type="email" placeholder="邮箱" id="regEmail" autocomplete="email" maxlength="254" required>
+                <input type="password" placeholder="密码（至少6位）" id="regPassword" autocomplete="new-password" minlength="6" maxlength="128" required>
+                <input type="password" placeholder="确认密码" id="regPassword2" autocomplete="new-password" minlength="6" maxlength="128" required>
                 <p class="auth-error hidden" id="regError"></p>
                 <button type="submit" class="btn btn-primary btn-full">注 册</button>
             </form>
