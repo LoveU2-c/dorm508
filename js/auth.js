@@ -1,6 +1,6 @@
 ﻿/* ===== 508宿舍 登录/注册模块 ===== */
 
-const API = 'http://localhost:3000/api';
+const API = '/api';
 
 // 状态
 let currentUser = null;

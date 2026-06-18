@@ -1,0 +1,15 @@
+name = "dorm508"
+account_id = "7214581627bf2b88f0c3e67b0416e746"
+main = "src/worker.js"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dorm508-db"
+database_id = "90739146-37f4-48c4-8697-efd3ed585ae9"
+
+[assets]
+directory = "./"
+binding = "ASSETS"
+run_worker_first = true

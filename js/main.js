@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     revealOnScroll();
 
     // ==================== 留言板（数据库版） ====================
-    const API = 'http://localhost:3000/api';
+    const API = '/api';
     const guestbookForm = document.getElementById('guestbookForm');
     const guestbookList = document.getElementById('guestbookList');
 

@@ -1,4 +1,5 @@
 ﻿node_modules/
 dorm508.db
 server.log
+.wrangler/
 .DS_Store
