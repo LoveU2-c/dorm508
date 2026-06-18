@@ -33,6 +33,27 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
+    // --- 首页动态统计 ---
+    const startDate = Date.UTC(2023, 8, 13);
+    const today = new Date();
+    const todayDate = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    const daysTogether = Math.max(0, Math.floor((todayDate - startDate) / 86400000));
+    document.getElementById('daysTogether').dataset.target = String(daysTogether);
+
+    // 使用中国时区的日期作为种子：所有访客当天看到同一数值，每天更新一次。
+    const chinaDateKey = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(today);
+    let dailySeed = 0;
+    for (const char of chinaDateKey) {
+        dailySeed = (dailySeed * 31 + char.charCodeAt(0)) >>> 0;
+    }
+    const happinessIndex = 500 + (dailySeed % 501);
+    document.getElementById('happinessIndex').dataset.target = String(happinessIndex);
+
     // --- 数字滚动动画 ---
     const statNums = document.querySelectorAll('.stat-num');
     let statsAnimated = false;
@@ -52,15 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const target = parseInt(raw, 10);
+            const suffix = el.dataset.suffix || '';
             const duration = 1500;
             const start = performance.now();
             function update(now) {
                 const elapsed = now - start;
                 const progress = Math.min(elapsed / duration, 1);
                 const eased = 1 - Math.pow(1 - progress, 3);
-                el.textContent = Math.floor(eased * target);
+                el.textContent = `${Math.floor(eased * target)}${suffix}`;
                 if (progress < 1) requestAnimationFrame(update);
-                else el.textContent = target;
+                else el.textContent = `${target}${suffix}`;
             }
             requestAnimationFrame(update);
         });
