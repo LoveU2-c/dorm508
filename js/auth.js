@@ -2,6 +2,21 @@
 
 const API = '/api';
 
+async function readApiResponse(res) {
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        throw new Error(`接口返回了非 JSON 内容（HTTP ${res.status}）`);
+    }
+    return res.json();
+}
+
+function connectionErrorMessage(err) {
+    if (location.protocol === 'file:') {
+        return '请通过网站地址访问，不要直接双击打开 index.html';
+    }
+    return `请求失败：${err.message || '请检查网络后重试'}`;
+}
+
 // 状态
 let currentUser = null;
 let currentToken = null;
@@ -87,7 +102,7 @@ loginForm.addEventListener('submit', async (e) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ identifier, password })
         });
-        const data = await res.json();
+        const data = await readApiResponse(res);
         if (data.ok) {
             currentUser = data.user;
             currentToken = data.token;
@@ -100,7 +115,7 @@ loginForm.addEventListener('submit', async (e) => {
             loginError.classList.remove('hidden');
         }
     } catch (err) {
-        loginError.textContent = '无法连接服务器，请确保后端已启动';
+        loginError.textContent = connectionErrorMessage(err);
         loginError.classList.remove('hidden');
     }
 });
@@ -126,7 +141,7 @@ registerForm.addEventListener('submit', async (e) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password })
         });
-        const data = await res.json();
+        const data = await readApiResponse(res);
         if (data.ok) {
             currentUser = data.user;
             currentToken = data.token;
@@ -142,7 +157,7 @@ registerForm.addEventListener('submit', async (e) => {
             regError.classList.remove('hidden');
         }
     } catch (err) {
-        regError.textContent = '无法连接服务器，请确保后端已启动';
+        regError.textContent = connectionErrorMessage(err);
         regError.classList.remove('hidden');
     }
 });

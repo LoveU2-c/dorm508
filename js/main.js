@@ -240,7 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(data.error || '留言失败');
             }
         } catch (err) {
-            alert('无法连接服务器，请确保后端已启动');
+            alert(location.protocol === 'file:'
+                ? '请通过网站地址访问，不要直接双击打开 index.html'
+                : `留言请求失败：${err.message || '请检查网络后重试'}`);
         }
     });
 
