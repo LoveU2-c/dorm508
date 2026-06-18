@@ -2,4 +2,5 @@
 dorm508.db
 server.log
 .wrangler/
+.npm-cache/
 .DS_Store

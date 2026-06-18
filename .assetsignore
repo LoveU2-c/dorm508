@@ -1,6 +1,7 @@
 .git/
 .github/
 .wrangler/
+.npm-cache/
 node_modules/
 .env
 .env.*
