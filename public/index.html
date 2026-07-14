@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>508宿舍 - 官方网站</title>
+    <meta name="description" content="508宿舍成员、旅行与共同回忆的线上空间。">
+    <meta name="theme-color" content="#000000">
+    <title>508宿舍｜一起生活，一起出发</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b6b'/><text x='32' y='46' text-anchor='middle' font-size='38' font-weight='bold' fill='white' font-family='Arial'>508</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23000000'/><text x='32' y='43' text-anchor='middle' font-size='27' font-weight='600' fill='white' font-family='Arial'>508</text></svg>">
 </head>
 <body>
     <!-- 导航栏 -->
     <nav class="nav" id="navbar">
         <div class="nav-container">
             <a href="#" class="nav-logo">
-                <span class="logo-text">🏠 508</span>
+                <span class="logo-mark" aria-hidden="true">508</span>
+                <span class="logo-text">宿舍</span>
             </a>
             <ul class="nav-links">
                 <li><a href="#home">首页</a></li>
@@ -22,9 +25,11 @@
                 <li><a href="#guestbook">留言</a></li>
             </ul>
             <div class="nav-auth">
-                <button class="btn-login" id="btnLogin">🔑 登录</button>
+                <button class="btn-login" id="btnLogin">登录</button>
                 <div class="user-menu hidden" id="userMenu">
                     <span class="user-name" id="displayName"></span>
+                    <button class="btn-admin" id="btnAdminLogin">管理员登录</button>
+                    <span class="admin-badge hidden" id="adminBadge">管理员</span>
                     <button class="btn-logout" id="btnLogout">退出</button>
                 </div>
             </div>
@@ -44,7 +49,8 @@
             </div>
             <!-- 登录表单 -->
             <form class="auth-form" id="loginForm">
-                <h3>欢迎回来 👋</h3>
+                <p class="modal-eyebrow">508 ACCOUNT</p>
+                <h3>欢迎回来</h3>
                 <input type="text" placeholder="用户名或邮箱" id="loginIdentifier" autocomplete="username" required>
                 <input type="password" placeholder="密码" id="loginPassword" autocomplete="current-password" required>
                 <p class="auth-error hidden" id="loginError"></p>
@@ -52,7 +58,8 @@
             </form>
             <!-- 注册表单 -->
             <form class="auth-form hidden" id="registerForm">
-                <h3>加入508 🎉</h3>
+                <p class="modal-eyebrow">JOIN 508</p>
+                <h3>加入 508</h3>
                 <input type="text" placeholder="用户名（至少2位）" id="regUsername" autocomplete="username" minlength="2" maxlength="30" required>
                 <input type="email" placeholder="邮箱" id="regEmail" autocomplete="email" maxlength="254" required>
                 <input type="password" placeholder="密码（至少6位）" id="regPassword" autocomplete="new-password" minlength="6" maxlength="128" required>
@@ -63,17 +70,31 @@
         </div>
     </div>
 
+    <!-- 管理员登录弹窗 -->
+    <div class="modal-overlay hidden" id="adminModal">
+        <div class="modal admin-modal">
+            <button class="modal-close" id="adminModalClose">&times;</button>
+            <form class="auth-form" id="adminLoginForm">
+                <p class="modal-eyebrow">ADMIN ACCESS</p>
+                <h3>管理员验证</h3>
+                <p class="admin-hint">需先登录普通账号</p>
+                <input type="password" placeholder="管理员密码" id="adminPassword" autocomplete="current-password" required>
+                <p class="auth-error hidden" id="adminLoginError"></p>
+                <button type="submit" class="btn btn-primary btn-full">获得管理员权限</button>
+            </form>
+        </div>
+    </div>
+
     <!-- 英雄区 -->
     <section class="hero" id="home">
-        <div class="hero-overlay"></div>
         <div class="hero-content">
-            <div class="hero-badge">🏆 五星级宿舍认证</div>
-            <h1 class="hero-title">赛博508 </h1>
+            <p class="hero-eyebrow">DORM 508 · SINCE 2023</p>
+            <h1 class="hero-title">五个人。<br>一个 508。</h1>
             <p class="hero-subtitle">神人怎么都在你们宿舍</p>
-            <p class="hero-desc">欢迎来到508宿舍官方网站！</p>
+            <p class="hero-desc">关于生活、远方，以及那些值得反复想起的瞬间。</p>
             <div class="hero-cta">
-                <a href="#members" class="btn btn-primary">认识成员</a>
-                <a href="#photowall" class="btn btn-outline">照片墙</a>
+                <a href="#members" class="btn btn-primary">认识 508</a>
+                <a href="#photowall" class="btn btn-outline">浏览照片</a>
             </div>
             <div class="hero-stats">
                 <div class="stat-item">
@@ -99,11 +120,12 @@
     <!-- 成员介绍 -->
     <section class="members-section" id="members">
         <div class="section-header">
-            <h2>👥 宿舍成员</h2>
-            <p>神人怎么都在你们宿舍</p>
+            <p class="section-eyebrow">THE PEOPLE</p>
+            <h2>住在 508 的人</h2>
+            <p>五种性格，同一个房间。</p>
         </div>
         <div class="members-grid">
-            <div class="member-card">
+            <div class="member-card easter-trigger" id="zhaoCard" role="button" tabindex="0" aria-label="赵宸乐的名片">
                 <div class="member-avatar">
                     <img src="image/zhaochenle.jpg" alt="赵宸乐">
                 </div>
@@ -111,7 +133,7 @@
                 <p class="member-role">赵妈</p>
                 <p class="member-bio">"我吉星转呢？"</p>
                 <div class="member-tags">
-                    <span>🚺 女主播一生之敌</span><span>🎮 样样通样样松</span><span>🌙 夜猫</span>
+                    <span>女主播一生之敌</span><span>样样通样样松</span><span>夜猫</span>
                 </div>
             </div>
             <div class="member-card">
@@ -122,7 +144,7 @@
                 <p class="member-role">花呗兽</p>
                 <p class="member-bio">"不管了"</p>
                 <div class="member-tags">
-                    <span>🎮 电竞</span><span>🌙 夜猫</span><span>🦥 拖延症</span>
+                    <span>电竞</span><span>夜猫</span><span>拖延症</span>
                 </div>
             </div>
             <div class="member-card">
@@ -133,7 +155,7 @@
                 <p class="member-role">干净又卫生</p>
                 <p class="member-bio">"求你了，杨哥"</p>
                 <div class="member-tags">
-                    <span>🎸 音乐</span><span>🎮 电竞</span><span>🌙 夜猫</span>
+                    <span>音乐</span><span>电竞</span><span>夜猫</span>
                 </div>
             </div>
             <div class="member-card">
@@ -144,7 +166,7 @@
                 <p class="member-role">烂梗王</p>
                 <p class="member-bio">"我chovy 室友给我来好的啊"</p>
                 <div class="member-tags">
-                    <span>⚽ 短视频</span><span>💪 烂梗</span><span>🌟 天才</span>
+                    <span>短视频</span><span>烂梗</span><span>天才</span>
                 </div>
             </div>
             <div class="member-card">
@@ -155,14 +177,15 @@
                 <p class="member-role">大胃袋</p>
                 <p class="member-bio">“怎么跟我妈说话呢？”</p>
                 <div class="member-tags">
-                    <span>💻 上床躺一会</span><span>🔧 下床刷抖音</span><span>🤖 上床躺一会</span>
+                    <span>上床躺一会</span><span>下床刷抖音</span><span>再躺一会</span>
                 </div>
             </div>
         </div>
 
         <div class="transfer-members">
             <div class="transfer-header">
-                <h3>508转职弈子</h3>
+                <p class="section-eyebrow">EXTENDED FAMILY</p>
+                <h3>508 转职弈子</h3>
             </div>
             <div class="members-grid transfer-grid">
                 <div class="member-card transfer-card">
@@ -209,8 +232,9 @@
     <!-- 旅行模块 -->
     <section class="travel-section" id="travel">
         <div class="section-header">
-            <h2>✈️ 读万卷书不如行万里路</h2>
-            <p>世界那么大，508带你去看看</p>
+            <p class="section-eyebrow">ON THE ROAD</p>
+            <h2>一起出发</h2>
+            <p>世界很大，508 的故事不只发生在宿舍。</p>
         </div>
         <div class="travel-grid">
             <div class="travel-card">
@@ -218,8 +242,9 @@
                     <img src="travel/fbi.jpg" alt="FBI旅行">
                 </div>
                 <div class="travel-info">
-                    <h3>🚔 FBI Open the door!</h3>
-                    <p>尼克狐尼克 你被逮捕了</p>
+                    <p class="travel-kicker">508 ROAD TRIP</p>
+                    <h3>FBI, open the door.</h3>
+                    <p>尼克狐尼克，你被逮捕了。</p>
                 </div>
             </div>
         </div>
@@ -228,8 +253,14 @@
     <!-- 照片墙 -->
     <section class="photowall-section" id="photowall">
         <div class="section-header">
-            <h2>🖼️ 照片墙</h2>
-            <p>每一帧都是青春的印记</p>
+            <p class="section-eyebrow">MEMORIES</p>
+            <h2>一些被记住的瞬间</h2>
+            <p>照片不会替我们解释，但会替我们记得。</p>
+        </div>
+        <div class="photo-admin-panel hidden" id="photoAdminPanel">
+            <label class="photo-upload-button" for="photoUploadInput">＋ 添加照片</label>
+            <input type="file" id="photoUploadInput" accept="image/jpeg,image/png,image/webp" hidden>
+            <span class="photo-upload-status" id="photoUploadStatus">支持 JPG、PNG、WebP</span>
         </div>
         <div class="photowall-grid">
             <div class="photowall-item">
@@ -250,16 +281,43 @@
         </div>
     </section>
 
+    <!-- 隐藏成员彩蛋 -->
+    <div class="easter-overlay hidden" id="easterOverlay">
+        <div class="easter-modal" role="dialog" aria-modal="true" aria-labelledby="easterTitle">
+            <button class="easter-close" id="easterClose" aria-label="关闭">&times;</button>
+            <div class="easter-lock" id="easterLock">
+                <div class="easter-icon">508</div>
+                <h3 id="easterTitle">发现一道暗门</h3>
+                <p>输入密码，看看里面藏着谁</p>
+                <form class="easter-form" id="easterForm">
+                    <input type="password" id="easterPassword" placeholder="请输入密码" autocomplete="off" required>
+                    <p class="easter-error hidden" id="easterError">密码不对，再想想 👀</p>
+                    <button type="submit" class="easter-submit">解锁彩蛋</button>
+                </form>
+            </div>
+            <div class="easter-reveal hidden" id="easterReveal">
+                <div class="easter-sparkles">隐藏成员已解锁</div>
+                <div class="member-card easter-member-card">
+                    <div class="member-avatar">
+                        <img src="image/dengkewei.jpg" alt="邓可为">
+                    </div>
+                    <h3>邓可为</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 留言板 -->
     <section class="guestbook-section" id="guestbook">
         <div class="section-header">
-            <h2>💬 留言板</h2>
-            <p>来都来了，留个言再走呗</p>
+            <p class="section-eyebrow">GUESTBOOK</p>
+            <h2>给 508 留句话</h2>
+            <p>来都来了，写下一点什么。</p>
         </div>
         <div class="guestbook-container">
             <form class="guestbook-form" id="guestbookForm">
                 <textarea placeholder="说点什么吧..." id="guestMessage" rows="3" required></textarea>
-                <button type="submit" class="btn btn-primary">📨 留言</button>
+                <button type="submit" class="btn btn-primary">发布留言</button>
             </form>
             <div class="guestbook-list" id="guestbookList"></div>
         </div>
@@ -268,7 +326,7 @@
     <!-- 页脚 -->
     <footer class="footer">
         <div class="footer-content">
-            <div class="footer-logo">🏠 508 宿舍</div>
+            <div class="footer-logo">508</div>
             <p class="footer-tagline">兄弟同心 · 其利断金 · 青春不散场</p>
             <div class="footer-links">
                 <a href="#home">首页</a>
@@ -277,14 +335,14 @@
                 <a href="#photowall">照片墙</a>
                 <a href="#guestbook">留言</a>
             </div>
-            <p class="footer-copy">© 2026 508宿舍 官方网站 | 用 ❤️ 和 🍜 构建</p>
+            <p class="footer-copy">© 2026 508 宿舍。共同生活，共同记得。</p>
         </div>
     </footer>
 
     <!-- 回到顶部 -->
-    <button class="back-to-top" id="backToTop" aria-label="回到顶部">⬆</button>
+    <button class="back-to-top" id="backToTop" aria-label="回到顶部">↑</button>
 
-    <script src="js/auth.js?v=20260618-2"></script>
-    <script src="js/main.js?v=20260618-2"></script>
+    <script src="js/auth.js?v=20260623-1"></script>
+    <script src="js/main.js?v=20260714-1"></script>
 </body>
 </html>

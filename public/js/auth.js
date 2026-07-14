@@ -20,6 +20,7 @@ function connectionErrorMessage(err) {
 // 状态
 let currentUser = null;
 let currentToken = null;
+let currentAdminToken = sessionStorage.getItem('dorm508_admin_token');
 
 // 从 localStorage 恢复登录态
 (function restoreAuth() {
@@ -47,6 +48,8 @@ const btnLogin = document.getElementById('btnLogin');
 const userMenu = document.getElementById('userMenu');
 const displayName = document.getElementById('displayName');
 const btnLogout = document.getElementById('btnLogout');
+const btnAdminLogin = document.getElementById('btnAdminLogin');
+const adminBadge = document.getElementById('adminBadge');
 const loginModal = document.getElementById('loginModal');
 const modalClose = document.getElementById('modalClose');
 const loginForm = document.getElementById('loginForm');
@@ -54,6 +57,10 @@ const registerForm = document.getElementById('registerForm');
 const loginError = document.getElementById('loginError');
 const regError = document.getElementById('regError');
 const modalTabs = document.querySelectorAll('.modal-tab');
+const adminModal = document.getElementById('adminModal');
+const adminModalClose = document.getElementById('adminModalClose');
+const adminLoginForm = document.getElementById('adminLoginForm');
+const adminLoginError = document.getElementById('adminLoginError');
 
 // 切换登录/注册表单
 modalTabs.forEach(tab => {
@@ -82,10 +89,51 @@ loginModal.addEventListener('click', (e) => {
 // 退出
 btnLogout.addEventListener('click', logout);
 
+btnAdminLogin.addEventListener('click', () => {
+    adminLoginError.classList.add('hidden');
+    adminModal.classList.remove('hidden');
+    setTimeout(() => document.getElementById('adminPassword').focus(), 50);
+});
+adminModalClose.addEventListener('click', () => adminModal.classList.add('hidden'));
+adminModal.addEventListener('click', (e) => {
+    if (e.target === adminModal) adminModal.classList.add('hidden');
+});
+
+adminLoginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    adminLoginError.classList.add('hidden');
+    try {
+        const res = await fetch(`${API}/admin/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentToken}`
+            },
+            body: JSON.stringify({ password: document.getElementById('adminPassword').value })
+        });
+        const data = await readApiResponse(res);
+        if (!data.ok) {
+            adminLoginError.textContent = data.error;
+            adminLoginError.classList.remove('hidden');
+            return;
+        }
+        currentAdminToken = data.adminToken;
+        sessionStorage.setItem('dorm508_admin_token', currentAdminToken);
+        document.getElementById('adminPassword').value = '';
+        adminModal.classList.add('hidden');
+        updateUI();
+    } catch (err) {
+        adminLoginError.textContent = connectionErrorMessage(err);
+        adminLoginError.classList.remove('hidden');
+    }
+});
+
 function logout() {
     currentUser = null;
     currentToken = null;
     localStorage.removeItem('dorm508_token');
+    currentAdminToken = null;
+    sessionStorage.removeItem('dorm508_admin_token');
     updateUI();
 }
 
@@ -167,13 +215,19 @@ function updateUI() {
     if (currentUser) {
         btnLogin.classList.add('hidden');
         userMenu.classList.remove('hidden');
-        displayName.textContent = `👤 ${currentUser.username}`;
+        displayName.textContent = currentUser.username;
+        btnAdminLogin.classList.toggle('hidden', Boolean(currentAdminToken));
+        adminBadge.classList.toggle('hidden', !currentAdminToken);
     } else {
         btnLogin.classList.remove('hidden');
         userMenu.classList.add('hidden');
         displayName.textContent = '';
+        btnAdminLogin.classList.add('hidden');
+        adminBadge.classList.add('hidden');
+        currentAdminToken = null;
+        sessionStorage.removeItem('dorm508_admin_token');
     }
     window.dispatchEvent(new CustomEvent('authchange', {
-        detail: { user: currentUser }
+        detail: { user: currentUser, adminToken: currentAdminToken }
     }));
 }

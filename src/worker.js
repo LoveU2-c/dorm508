@@ -22,6 +22,26 @@ function isValidEmail(email) {
   return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function getBearerToken(c) {
+  const auth = c.req.header('Authorization');
+  return auth?.startsWith('Bearer ') ? auth.slice(7) : '';
+}
+
+function verifyToken(c) {
+  const token = getBearerToken(c);
+  if (!token) return null;
+  try {
+    return jwt.verify(token, getJwtSecret(c));
+  } catch {
+    return null;
+  }
+}
+
+function verifyAdminToken(c) {
+  const decoded = verifyToken(c);
+  return decoded?.admin === true ? decoded : null;
+}
+
 // ==================== 健康检查 ====================
 app.get('/health', (c) => c.text('OK'));
 
@@ -114,6 +134,135 @@ app.get('/api/me', async (c) => {
   } catch {
     return c.json({ ok: false, error: '登录已过期' }, 401);
   }
+});
+
+// ==================== 管理员 API ====================
+app.post('/api/admin/login', async (c) => {
+  const decoded = verifyToken(c);
+  if (!decoded) {
+    return c.json({ ok: false, error: '请先登录普通账号' }, 401);
+  }
+
+  const user = await c.env.DB.prepare(
+    'SELECT id FROM users WHERE id = ?'
+  ).bind(decoded.id).first();
+  if (!user) {
+    return c.json({ ok: false, error: '用户不存在' }, 404);
+  }
+  if (!c.env.ADMIN_PASSWORD) {
+    return c.json({ ok: false, error: '管理员功能尚未配置' }, 503);
+  }
+
+  const body = await c.req.json();
+  const password = typeof body.password === 'string' ? body.password : '';
+  if (password !== c.env.ADMIN_PASSWORD) {
+    return c.json({ ok: false, error: '管理员密码错误' }, 403);
+  }
+
+  const adminToken = jwt.sign(
+    { id: user.id, admin: true },
+    getJwtSecret(c),
+    { expiresIn: '8h' }
+  );
+  return c.json({ ok: true, adminToken });
+});
+
+app.get('/api/admin/me', async (c) => {
+  if (!verifyAdminToken(c)) {
+    return c.json({ ok: false, error: '管理员登录已过期' }, 401);
+  }
+  return c.json({ ok: true });
+});
+
+// ==================== 照片墙 API ====================
+app.get('/api/photos', async (c) => {
+  const { results } = await c.env.DB.prepare(
+    'SELECT id, filename, mime_type, created_at FROM photos ORDER BY id DESC'
+  ).all();
+  return c.json({
+    ok: true,
+    photos: results.map((photo) => ({
+      ...photo,
+      url: `/api/photos/${photo.id}/image`,
+    })),
+  });
+});
+
+app.get('/api/photos/:id/image', async (c) => {
+  const photoId = Number(c.req.param('id'));
+  if (!Number.isInteger(photoId) || photoId <= 0) {
+    return c.notFound();
+  }
+
+  const photo = await c.env.DB.prepare(
+    'SELECT mime_type, image_data FROM photos WHERE id = ?'
+  ).bind(photoId).first();
+  if (!photo) {
+    return c.notFound();
+  }
+
+  return new Response(photo.image_data, {
+    headers: {
+      'Content-Type': photo.mime_type,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  });
+});
+
+app.post('/api/photos', async (c) => {
+  const decoded = verifyAdminToken(c);
+  if (!decoded) {
+    return c.json({ ok: false, error: '需要管理员权限' }, 403);
+  }
+
+  const form = await c.req.formData();
+  const file = form.get('photo');
+  if (!(file instanceof File)) {
+    return c.json({ ok: false, error: '请选择照片' }, 400);
+  }
+
+  const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  if (!allowedTypes.has(file.type)) {
+    return c.json({ ok: false, error: '仅支持 JPG、PNG 或 WebP 图片' }, 400);
+  }
+  if (file.size <= 0 || file.size > 1_500_000) {
+    return c.json({ ok: false, error: '图片压缩后需小于 1.5MB' }, 400);
+  }
+
+  const imageData = await file.arrayBuffer();
+  const filename = file.name.slice(0, 120) || 'photo.jpg';
+  const result = await c.env.DB.prepare(
+    'INSERT INTO photos (user_id, filename, mime_type, image_data) VALUES (?, ?, ?, ?)'
+  ).bind(decoded.id, filename, file.type, imageData).run();
+  const id = Number(result.meta.last_row_id);
+
+  return c.json({
+    ok: true,
+    photo: { id, filename, mime_type: file.type, url: `/api/photos/${id}/image` },
+  });
+});
+
+app.delete('/api/photos/:id', async (c) => {
+  if (!verifyAdminToken(c)) {
+    return c.json({ ok: false, error: '需要管理员权限' }, 403);
+  }
+
+  const photoId = Number(c.req.param('id'));
+  if (!Number.isInteger(photoId) || photoId <= 0) {
+    return c.json({ ok: false, error: '照片不存在' }, 404);
+  }
+
+  const photo = await c.env.DB.prepare(
+    'SELECT id FROM photos WHERE id = ?'
+  ).bind(photoId).first();
+  if (!photo) {
+    return c.json({ ok: false, error: '照片不存在' }, 404);
+  }
+
+  await c.env.DB.prepare(
+    'DELETE FROM photos WHERE id = ?'
+  ).bind(photoId).run();
+  return c.json({ ok: true });
 });
 
 // ==================== 留言板 API ====================

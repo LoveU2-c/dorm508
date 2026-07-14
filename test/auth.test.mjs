@@ -50,11 +50,13 @@ async function createEnv() {
   db.exec(await readFile(new URL('../migrations/0001_init.sql', import.meta.url), 'utf8'));
   db.exec(await readFile(new URL('../migrations/0002_add_user_email.sql', import.meta.url), 'utf8'));
   db.exec(await readFile(new URL('../migrations/0003_add_message_owner.sql', import.meta.url), 'utf8'));
+  db.exec(await readFile(new URL('../migrations/0004_add_photos.sql', import.meta.url), 'utf8'));
   return {
     db,
     env: {
       DB: new D1DatabaseMock(db),
       JWT_SECRET: 'test-secret',
+      ADMIN_PASSWORD: 'test-admin-password',
       ASSETS: { fetch: () => new Response('not found', { status: 404 }) },
     },
   };
@@ -194,6 +196,96 @@ test('allows users to delete only their own messages', async () => {
   );
   assert.equal(deleteResponse.status, 200);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM messages').get().count, 0);
+
+  db.close();
+});
+
+test('requires a signed-in user and the correct password for admin access', async () => {
+  const { db, env } = await createEnv();
+
+  const anonymous = await post('/api/admin/login', {
+    password: 'test-admin-password',
+  }, env);
+  assert.equal(anonymous.status, 401);
+
+  const registrationResponse = await post('/api/register', {
+    username: 'admin-user',
+    email: 'admin@example.com',
+    password: 'secret123',
+  }, env);
+  const registration = await registrationResponse.json();
+
+  const wrongPassword = await authenticatedRequest(
+    '/api/admin/login',
+    'POST',
+    registration.token,
+    env,
+    { password: 'wrong-password' }
+  );
+  assert.equal(wrongPassword.status, 403);
+
+  const success = await authenticatedRequest(
+    '/api/admin/login',
+    'POST',
+    registration.token,
+    env,
+    { password: 'test-admin-password' }
+  );
+  assert.equal(success.status, 200);
+  const data = await success.json();
+  assert.ok(data.adminToken);
+
+  const adminCheck = await authenticatedRequest(
+    '/api/admin/me',
+    'GET',
+    data.adminToken,
+    env
+  );
+  assert.equal(adminCheck.status, 200);
+
+  db.close();
+});
+
+test('allows only administrators to delete uploaded photos', async () => {
+  const { db, env } = await createEnv();
+
+  const registrationResponse = await post('/api/register', {
+    username: 'photo-admin',
+    email: 'photo-admin@example.com',
+    password: 'secret123',
+  }, env);
+  const registration = await registrationResponse.json();
+
+  const adminResponse = await authenticatedRequest(
+    '/api/admin/login',
+    'POST',
+    registration.token,
+    env,
+    { password: 'test-admin-password' }
+  );
+  const admin = await adminResponse.json();
+
+  const photoResult = db.prepare(
+    'INSERT INTO photos (user_id, filename, mime_type, image_data) VALUES (?, ?, ?, ?)'
+  ).run(registration.user.id, 'test.jpg', 'image/jpeg', Buffer.from([1, 2, 3]));
+  const photoId = Number(photoResult.lastInsertRowid);
+
+  const forbidden = await authenticatedRequest(
+    `/api/photos/${photoId}`,
+    'DELETE',
+    registration.token,
+    env
+  );
+  assert.equal(forbidden.status, 403);
+
+  const deleted = await authenticatedRequest(
+    `/api/photos/${photoId}`,
+    'DELETE',
+    admin.adminToken,
+    env
+  );
+  assert.equal(deleted.status, 200);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM photos').get().count, 0);
 
   db.close();
 });

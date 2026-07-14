@@ -118,35 +118,202 @@ document.addEventListener('DOMContentLoaded', () => {
     lightbox.addEventListener('click', (e) => {
         if (e.target === lightbox) closeLightbox();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeLightbox();
-    });
-
     document.querySelectorAll('.photowall-item img, .travel-img img').forEach(img => {
         img.addEventListener('click', () => openLightbox(img.src));
     });
 
-    // --- 滚动渐入动画 ---
-    const revealEls = document.querySelectorAll('.member-card, .travel-card, .photowall-item, .guestbook-item');
+    // --- 管理员照片墙 ---
+    const photowallGrid = document.querySelector('.photowall-grid');
+    const photoAdminPanel = document.getElementById('photoAdminPanel');
+    const photoUploadInput = document.getElementById('photoUploadInput');
+    const photoUploadStatus = document.getElementById('photoUploadStatus');
 
-    function revealOnScroll() {
-        const windowHeight = window.innerHeight;
-        revealEls.forEach(el => {
-            const top = el.getBoundingClientRect().top;
-            if (top < windowHeight - 60) {
-                el.style.opacity = '1';
-                el.style.transform = 'translateY(0)';
-            }
+    function addPhotoToWall(photo, prepend = true) {
+        const item = document.createElement('div');
+        item.className = 'photowall-item uploaded-photo';
+        item.dataset.photoId = photo.id;
+        const img = document.createElement('img');
+        img.src = photo.url;
+        img.alt = photo.filename || '管理员上传的照片';
+        img.loading = 'lazy';
+        img.addEventListener('click', () => openLightbox(img.src));
+        item.appendChild(img);
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'photo-delete hidden';
+        deleteButton.setAttribute('aria-label', `删除${img.alt}`);
+        deleteButton.textContent = '删除';
+        item.appendChild(deleteButton);
+        deleteButton.classList.toggle('hidden', !currentAdminToken);
+        if (prepend) photowallGrid.prepend(item);
+        else photowallGrid.appendChild(item);
+    }
+
+    async function loadUploadedPhotos() {
+        try {
+            const res = await fetch('/api/photos');
+            const data = await res.json();
+            if (data.ok) data.photos.forEach(photo => addPhotoToWall(photo, true));
+        } catch {
+            // 上传照片接口暂不可用时保留内置照片。
+        }
+    }
+
+    function compressPhoto(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const objectUrl = URL.createObjectURL(file);
+            img.onload = () => {
+                const maxSide = 1800;
+                const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(img.width * scale));
+                canvas.height = Math.max(1, Math.round(img.height * scale));
+                const context = canvas.getContext('2d');
+                context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(objectUrl);
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error('图片处理失败'));
+                        return;
+                    }
+                    resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {
+                        type: 'image/jpeg'
+                    }));
+                }, 'image/jpeg', 0.82);
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(objectUrl);
+                reject(new Error('无法读取图片'));
+            };
+            img.src = objectUrl;
         });
     }
 
-    revealEls.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    window.addEventListener('authchange', (event) => {
+        photoAdminPanel.classList.toggle('hidden', !event.detail.adminToken);
+        photowallGrid.querySelectorAll('.photo-delete').forEach(button => {
+            button.classList.toggle('hidden', !event.detail.adminToken);
+        });
     });
-    window.addEventListener('scroll', revealOnScroll, { passive: true });
-    revealOnScroll();
+    photoAdminPanel.classList.toggle('hidden', !currentAdminToken);
+
+    photoUploadInput.addEventListener('change', async () => {
+        const original = photoUploadInput.files?.[0];
+        if (!original || !currentAdminToken) return;
+
+        photoUploadStatus.className = 'photo-upload-status';
+        photoUploadStatus.textContent = '正在压缩并上传…';
+        photoUploadInput.disabled = true;
+        try {
+            const compressed = await compressPhoto(original);
+            if (compressed.size > 1_500_000) {
+                throw new Error('图片压缩后仍超过 1.5MB，请换一张较小的图片');
+            }
+            const form = new FormData();
+            form.append('photo', compressed);
+            const res = await fetch('/api/photos', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${currentAdminToken}` },
+                body: form
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || '上传失败');
+            addPhotoToWall(data.photo, true);
+            photoUploadStatus.classList.add('success');
+            photoUploadStatus.textContent = '上传成功！';
+        } catch (err) {
+            photoUploadStatus.classList.add('error');
+            photoUploadStatus.textContent = err.message || '上传失败';
+        } finally {
+            photoUploadInput.disabled = false;
+            photoUploadInput.value = '';
+        }
+    });
+
+    photowallGrid.addEventListener('click', async (event) => {
+        const button = event.target.closest('.photo-delete');
+        if (!button || !currentAdminToken) return;
+        const item = button.closest('.uploaded-photo');
+        const photoId = item?.dataset.photoId;
+        if (!photoId || !confirm('确定永久删除这张照片吗？')) return;
+
+        button.disabled = true;
+        button.textContent = '删除中…';
+        try {
+            const res = await fetch(`/api/photos/${photoId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${currentAdminToken}` }
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || '删除失败');
+            item.remove();
+            closeLightbox();
+            photoUploadStatus.className = 'photo-upload-status success';
+            photoUploadStatus.textContent = '照片已删除';
+        } catch (err) {
+            button.disabled = false;
+            button.textContent = '删除';
+            photoUploadStatus.className = 'photo-upload-status error';
+            photoUploadStatus.textContent = err.message || '删除失败';
+        }
+    });
+    loadUploadedPhotos();
+
+    // --- 隐藏成员彩蛋 ---
+    const zhaoCard = document.getElementById('zhaoCard');
+    const easterOverlay = document.getElementById('easterOverlay');
+    const easterClose = document.getElementById('easterClose');
+    const easterForm = document.getElementById('easterForm');
+    const easterPassword = document.getElementById('easterPassword');
+    const easterError = document.getElementById('easterError');
+    const easterLock = document.getElementById('easterLock');
+    const easterReveal = document.getElementById('easterReveal');
+
+    function openEasterEgg() {
+        easterOverlay.classList.remove('hidden');
+        easterLock.classList.remove('hidden');
+        easterReveal.classList.add('hidden');
+        easterError.classList.add('hidden');
+        easterPassword.value = '';
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => easterPassword.focus(), 50);
+    }
+
+    function closeEasterEgg() {
+        easterOverlay.classList.add('hidden');
+        document.body.style.overflow = '';
+        zhaoCard.focus();
+    }
+
+    zhaoCard.addEventListener('click', openEasterEgg);
+    zhaoCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openEasterEgg();
+        }
+    });
+    easterClose.addEventListener('click', closeEasterEgg);
+    easterOverlay.addEventListener('click', (e) => {
+        if (e.target === easterOverlay) closeEasterEgg();
+    });
+    easterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (easterPassword.value === 'dkw0607') {
+            easterLock.classList.add('hidden');
+            easterReveal.classList.remove('hidden');
+        } else {
+            easterError.classList.remove('hidden');
+            easterPassword.select();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeLightbox();
+            if (!easterOverlay.classList.contains('hidden')) closeEasterEgg();
+        }
+    });
 
     // ==================== 留言板（数据库版） ====================
     const API = '/api';
