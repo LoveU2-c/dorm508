@@ -289,3 +289,72 @@ test('allows only administrators to delete uploaded photos', async () => {
 
   db.close();
 });
+
+test('allows administrators to manage registered accounts safely', async () => {
+  const { db, env } = await createEnv();
+
+  const adminRegistration = await post('/api/register', {
+    username: 'account-admin',
+    email: 'account-admin@example.com',
+    password: 'secret123',
+  }, env);
+  const adminUser = await adminRegistration.json();
+
+  const memberRegistration = await post('/api/register', {
+    username: 'member-to-delete',
+    email: 'member-to-delete@example.com',
+    password: 'secret123',
+  }, env);
+  const member = await memberRegistration.json();
+
+  const adminResponse = await authenticatedRequest(
+    '/api/admin/login',
+    'POST',
+    adminUser.token,
+    env,
+    { password: 'test-admin-password' }
+  );
+  const admin = await adminResponse.json();
+
+  db.prepare('INSERT INTO messages (user_id, username, content) VALUES (?, ?, ?)').run(
+    member.user.id,
+    member.user.username,
+    'delete me too'
+  );
+  db.prepare(
+    'INSERT INTO photos (user_id, filename, mime_type, image_data) VALUES (?, ?, ?, ?)'
+  ).run(member.user.id, 'owned.jpg', 'image/jpeg', Buffer.from([1, 2, 3]));
+
+  const usersResponse = await authenticatedRequest(
+    '/api/admin/users',
+    'GET',
+    admin.adminToken,
+    env
+  );
+  assert.equal(usersResponse.status, 200);
+  const usersData = await usersResponse.json();
+  const listedMember = usersData.users.find((user) => user.id === member.user.id);
+  assert.equal(listedMember.message_count, 1);
+  assert.equal(listedMember.photo_count, 1);
+
+  const selfDelete = await authenticatedRequest(
+    `/api/admin/users/${adminUser.user.id}`,
+    'DELETE',
+    admin.adminToken,
+    env
+  );
+  assert.equal(selfDelete.status, 400);
+
+  const deleteMember = await authenticatedRequest(
+    `/api/admin/users/${member.user.id}`,
+    'DELETE',
+    admin.adminToken,
+    env
+  );
+  assert.equal(deleteMember.status, 200);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM users WHERE id = ?').get(member.user.id).count, 0);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM messages WHERE user_id = ?').get(member.user.id).count, 0);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM photos WHERE user_id = ?').get(member.user.id).count, 0);
+
+  db.close();
+});

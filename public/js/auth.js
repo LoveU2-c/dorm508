@@ -50,6 +50,7 @@ const displayName = document.getElementById('displayName');
 const btnLogout = document.getElementById('btnLogout');
 const btnAdminLogin = document.getElementById('btnAdminLogin');
 const adminBadge = document.getElementById('adminBadge');
+const adminConsoleLink = document.getElementById('adminConsoleLink');
 const loginModal = document.getElementById('loginModal');
 const modalClose = document.getElementById('modalClose');
 const loginForm = document.getElementById('loginForm');
@@ -218,12 +219,14 @@ function updateUI() {
         displayName.textContent = currentUser.username;
         btnAdminLogin.classList.toggle('hidden', Boolean(currentAdminToken));
         adminBadge.classList.toggle('hidden', !currentAdminToken);
+        adminConsoleLink.classList.toggle('hidden', !currentAdminToken);
     } else {
         btnLogin.classList.remove('hidden');
         userMenu.classList.add('hidden');
         displayName.textContent = '';
         btnAdminLogin.classList.add('hidden');
         adminBadge.classList.add('hidden');
+        adminConsoleLink.classList.add('hidden');
         currentAdminToken = null;
         sessionStorage.removeItem('dorm508_admin_token');
     }

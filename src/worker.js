@@ -174,6 +174,73 @@ app.get('/api/admin/me', async (c) => {
   return c.json({ ok: true });
 });
 
+app.get('/api/admin/users', async (c) => {
+  if (!verifyAdminToken(c)) {
+    return c.json({ ok: false, error: '需要管理员权限' }, 403);
+  }
+
+  const { results } = await c.env.DB.prepare(
+    `SELECT
+      users.id,
+      users.username,
+      users.email,
+      users.created_at,
+      COUNT(DISTINCT messages.id) AS message_count,
+      COUNT(DISTINCT photos.id) AS photo_count
+    FROM users
+    LEFT JOIN messages ON messages.user_id = users.id
+    LEFT JOIN photos ON photos.user_id = users.id
+    GROUP BY users.id
+    ORDER BY users.id DESC`
+  ).all();
+
+  return c.json({
+    ok: true,
+    users: results.map((user) => ({
+      id: user.id,
+      username: user.username,
+      email: user.email || null,
+      created_at: user.created_at,
+      message_count: Number(user.message_count || 0),
+      photo_count: Number(user.photo_count || 0),
+    })),
+  });
+});
+
+app.delete('/api/admin/users/:id', async (c) => {
+  const admin = verifyAdminToken(c);
+  if (!admin) {
+    return c.json({ ok: false, error: '需要管理员权限' }, 403);
+  }
+
+  const userId = Number(c.req.param('id'));
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return c.json({ ok: false, error: '用户不存在' }, 404);
+  }
+  if (Number(admin.id) === userId) {
+    return c.json({ ok: false, error: '不能删除当前管理员账号' }, 400);
+  }
+
+  const user = await c.env.DB.prepare(
+    'SELECT id FROM users WHERE id = ?'
+  ).bind(userId).first();
+  if (!user) {
+    return c.json({ ok: false, error: '用户不存在' }, 404);
+  }
+
+  await c.env.DB.prepare(
+    'DELETE FROM messages WHERE user_id = ?'
+  ).bind(userId).run();
+  await c.env.DB.prepare(
+    'DELETE FROM photos WHERE user_id = ?'
+  ).bind(userId).run();
+  await c.env.DB.prepare(
+    'DELETE FROM users WHERE id = ?'
+  ).bind(userId).run();
+
+  return c.json({ ok: true });
+});
+
 // ==================== 照片墙 API ====================
 app.get('/api/photos', async (c) => {
   const { results } = await c.env.DB.prepare(
@@ -345,6 +412,12 @@ app.delete('/api/messages/:id', async (c) => {
 });
 
 // ==================== 静态文件 ====================
+app.get('/admin', async (c) => {
+  const url = new URL(c.req.url);
+  url.pathname = '/admin.html';
+  return c.env.ASSETS.fetch(new Request(url, c.req.raw));
+});
+
 app.get('/*', async (c) => {
   const path = new URL(c.req.url).pathname;
   const blockedPaths = [

@@ -5,3 +5,6 @@ server.log
 .npm-cache/
 .DS_Store
 awesome-design-md-main/
+.dev.vars
+.env
+.env.*

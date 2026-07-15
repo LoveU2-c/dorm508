@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>508宿舍｜管理员后台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23000000'/><text x='32' y='43' text-anchor='middle' font-size='27' font-weight='600' fill='white' font-family='Arial'>508</text></svg>">
+</head>
+<body class="admin-page">
+    <nav class="nav admin-nav" id="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-mark" aria-hidden="true">508</span>
+                <span class="logo-text">宿舍</span>
+            </a>
+            <ul class="nav-links admin-nav-links">
+                <li><a href="/">返回首页</a></li>
+            </ul>
+            <div class="nav-auth">
+                <span class="admin-badge hidden" id="adminPageBadge">管理员</span>
+                <button class="btn-logout hidden" id="adminLogout">退出登录</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-shell">
+        <section class="admin-hero">
+            <p class="section-eyebrow">ADMIN CENTER</p>
+            <h1>账号管理</h1>
+            <p>查看网站所有已注册账号，必要时删除异常账号。</p>
+        </section>
+
+        <section class="admin-card" id="adminGate">
+            <h2>需要管理员权限</h2>
+            <p>请先在首页登录普通账号，并通过“管理员登录”获得权限后，再进入这里。</p>
+            <div class="admin-actions">
+                <a class="btn btn-primary" href="/#home">去首页登录</a>
+                <button class="btn btn-outline admin-refresh" id="retryAdmin">我已登录，重新检测</button>
+            </div>
+            <p class="auth-error hidden" id="adminGateError"></p>
+        </section>
+
+        <section class="admin-card hidden" id="adminPanel">
+            <div class="admin-panel-head">
+                <div>
+                    <p class="section-eyebrow">REGISTERED USERS</p>
+                    <h2>已注册账号</h2>
+                </div>
+                <div class="admin-tools">
+                    <input type="search" id="userSearch" placeholder="搜索用户名或邮箱">
+                    <button class="btn btn-outline admin-refresh" id="refreshUsers">刷新</button>
+                </div>
+            </div>
+
+            <div class="admin-summary" id="adminSummary">正在加载账号…</div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>邮箱</th>
+                            <th>留言</th>
+                            <th>照片</th>
+                            <th>注册时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/admin.js?v=20260715-1"></script>
+</body>
+</html>
